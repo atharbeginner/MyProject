@@ -1,17 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using API.Data;
 using API.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    [ApiController]
-    [Route("api/users")]
-    public class UsersController : ControllerBase
+    [Authorize]
+    public class UsersController : BaseApiController
     {
         private readonly DataContext _context;
         public UsersController(DataContext context)
@@ -19,7 +15,8 @@ namespace API.Controllers
             _context = context;
 
         }
-
+        
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
         {
@@ -32,6 +29,16 @@ namespace API.Controllers
         {
             var user = await _context.Users.FindAsync(id);
             return user;
+        }
+
+        [HttpDelete("delete/{id}")]
+        public async Task<ActionResult<string>> DeleteUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if(user == null) return NotFound("User doesn't exists");
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok("User Deleted Successfuly");
         }
     }
 }
